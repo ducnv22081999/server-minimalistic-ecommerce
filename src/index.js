@@ -4,7 +4,7 @@ const methodOverride = require("method-override");
 const cors = require("cors");
 
 const app = express();
-const port = process.env.PORT || 6969;
+const PORT = process.env.PORT || 6969;
 
 const route = require("./routes/");
 const db = require("./config/db");
@@ -42,6 +42,6 @@ app.get("/", (req, res) => {
 // Routes init
 route(app);
 
-app.listen(port, () => {
+app.listen(PORT, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });

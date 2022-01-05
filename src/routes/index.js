@@ -1,5 +1,5 @@
-const productRouter = require("./product");
-const categoryRouter = require("./category");
+const productRouter = require("./api/product");
+const categoryRouter = require("./api/category");
 
 function route(app) {
   app.use("/api/product", productRouter);

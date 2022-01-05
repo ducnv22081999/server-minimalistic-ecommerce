@@ -36,12 +36,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Hello! My name is Duc");
 });
 
 // Routes init
 route(app);
 
 app.listen(PORT, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+  console.log(`Example app listening at http://localhost:${PORT}`);
 });

@@ -11,6 +11,9 @@ const productSchema = new Schema(
     price: { type: Number, required: true },
     category_id: { type: ObjectId, ref: "Category" },
     rating: { type: Number, required: true },
+    description: { type: String, required: true },
+    slug: { type: String, slug: "name", unique: true },
+    quantily: { type: Number, required: true },
     photo: {
       data: Buffer,
       contentType: String,

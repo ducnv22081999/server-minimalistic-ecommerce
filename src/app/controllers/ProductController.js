@@ -1,3 +1,6 @@
+const formidable = require("formidable");
+const fs = require("fs");
+
 const Product = require("../models/Product");
 
 const multer = require("multer");
@@ -18,30 +21,77 @@ class ProductController {
   }
   // [POST] /products/
   create(req, res, next) {
-    const { name, category_id, rating, price, thumbnail_cdn } = req.body;
-    console.log(typeof thumbnail_cdn);
+    // const { name, category_id, rating, price, thumbnail_cdn } = req.body;
+    const form = new formidable.IncomingForm();
+    form.keepExtensions = true;
+    form.parse(req, (err, fields, files) => {
+      console.log(files);
+      if (err) {
+        return res.status(400).json(err.message);
+      }
+      const { name, category_id, rating, price, description, quantily } =
+        fields;
+      if (!name || !category_id || !rating || !price) {
+        return res
+          .status(400)
+          .json({ message: "Bạn cần nhập đầy đủ thông tin!" });
+      }
+      const product = new Product({
+        name,
+        price,
+        category_id,
+        rating,
+        quantily,
+        description,
+      });
+      if (files.thumbnail_cdn) {
+        if (files.size > 10000) {
+          return res
+            .status(400)
+            .json({ message: "bạn nên upload ảnh dưới 10mb!" });
+        }
+        product.photo.data = fs.readFileSync(files.thumbnail_cdn.filepath);
+        product.photo.contentType = files.thumbnail_cdn.mimetype;
+      }
 
-    console.log(thumbnail_cdn[0]);
+      product
+        .save()
+        .then((product) => {
+          return res.status(200).json(product);
+        })
+        .catch((err, next) => {
+          res.status(500).json(err.message);
+          next;
+        });
 
-    const product = new Product({
-      name,
-      price: price,
-      category_id,
-      rating,
-      photo: thumbnail_cdn,
+      // console.log("prod", product);
+
+      // res.json(product);
     });
 
-    console.log(product);
+    // console.log(typeof thumbnail_cdn);
 
-    product
-      .save()
-      .then((product) => {
-        return res.status(200).json(product);
-      })
-      .catch((err, next) => {
-        res.status(500).json(err.message);
-        next;
-      });
+    // console.log(thumbnail_cdn[0]);
+
+    // const product = new Product({
+    //   name,
+    //   price: price,
+    //   category_id,
+    //   rating,
+    //   photo: thumbnail_cdn,
+    // });
+
+    // console.log(product);
+
+    // product
+    //   .save()
+    //   .then((product) => {
+    //     return res.status(200).json(product);
+    //   })
+    //   .catch((err, next) => {
+    //     res.status(500).json(err.message);
+    //     next;
+    //   });
   }
   // PUT /products/:id
   update(req, res, next) {
@@ -64,6 +114,26 @@ class ProductController {
         res.status(500).json(err.message);
         next;
       });
+  }
+
+  // productById
+  productById(req, res, next, id) {
+    Product.findById(id).exec((err, product) => {
+      if (err || !product) {
+        return res.status(400).json({ message: "Không tìm thấy sp!" });
+      }
+      req.product = product;
+      next();
+    });
+  }
+
+  // get Image to Id image
+  getImageToId(req, res, next) {
+    if (req.product.photo.data) {
+      res.set("Content-Type", req.product.photo.data.contentType);
+      return res.send(req.product.photo.data);
+    }
+    next();
   }
 }
 

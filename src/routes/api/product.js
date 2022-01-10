@@ -11,10 +11,6 @@ router.post("/", productController.create);
 router.delete("/:id", productController.destroy);
 router.put("/:id", productController.update);
 
-// get Image to Id image
-router.get("/photo/:productId", productController.getImageToId);
-router.param("productId", productController.productById);
-
 // upload image
 router.post("/image/", productController.uploadImage);
 

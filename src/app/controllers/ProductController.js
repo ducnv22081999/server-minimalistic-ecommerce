@@ -64,26 +64,6 @@ class ProductController {
       });
   }
 
-  // productById
-  productById(req, res, next, id) {
-    Product.findById(id).exec((err, product) => {
-      if (err || !product) {
-        return res.status(400).json({ message: "Không tìm thấy sp!" });
-      }
-      req.product = product;
-      next();
-    });
-  }
-
-  // get Image to Id image
-  getImageToId(req, res, next) {
-    if (req.product.photo.data) {
-      res.set("Content-Type", req.product.photo.data.contentType);
-      return res.send(req.product.photo.data);
-    }
-    next();
-  }
-
   // upload image to firebase
   uploadImage(req, res, next) {
     console.log("đang up load");
@@ -93,7 +73,6 @@ class ProductController {
       if (err) {
         return res.status(400).json(err.message);
       }
-      console.log(files);
       if (files.image) {
         if (files.size > 10000) {
           return res

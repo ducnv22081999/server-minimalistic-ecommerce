@@ -15,4 +15,7 @@ router.put("/:id", productController.update);
 router.get("/photo/:productId", productController.getImageToId);
 router.param("productId", productController.productById);
 
+// upload image
+router.post("/image/", productController.uploadImage);
+
 module.exports = router;

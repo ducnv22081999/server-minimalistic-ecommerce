@@ -30,100 +30,16 @@ class ProductController {
   }
   // [POST] /products/
   create(req, res, next) {
-    const form = new formidable.IncomingForm();
-    form.keepExtensions = true;
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        return res.status(400).json(err.message);
-      }
-      const { name, category_id, rating, price, description, quantily } =
-        fields;
-      if (!name || !category_id || !rating || !price) {
-        return res
-          .status(400)
-          .json({ message: "Bạn cần nhập đầy đủ thông tin!" });
-      }
-      const product = new Product({
-        name,
-        price,
-        category_id,
-        rating,
-        quantily,
-        description,
+    const product = new Product(req.body);
+    product
+      .save()
+      .then((product) => {
+        return res.status(200).json(product);
+      })
+      .catch((err, next) => {
+        res.status(500).json(err.message);
+        next;
       });
-
-      if (files.thumbnail_cdn) {
-        if (files.size > 10000) {
-          return res
-            .status(400)
-            .json({ message: "bạn nên upload ảnh dưới 10mb!" });
-        }
-
-        // const data = uploadImageToFirebase(files.thumbnail_cdn);
-        // console.log("link down là ", data);
-
-        const storageRef = ref(
-          storage,
-          `images/${files.thumbnail_cdn.originalFilename}`
-        );
-
-        const uploadTask = uploadBytesResumable(
-          storageRef,
-          fs.readFileSync(files.thumbnail_cdn.filepath),
-          {
-            contentType: "image/jpeg",
-          }
-        );
-
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            // Observe state change events such as progress, pause, and resume
-            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-            const progress =
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log("Upload is " + progress + "% done");
-            switch (snapshot.state) {
-              case "paused":
-                console.log("Upload is paused");
-                break;
-              case "running":
-                console.log("Upload is running");
-                break;
-            }
-          },
-          (error) => {
-            // Handle unsuccessful uploads
-            console.log("Lỗi cmnr ", error);
-          },
-          () => {
-            // Handle successful uploads on complete
-            // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-              console.log("File available at", downloadURL);
-              product.thumbnail_cdn_server = downloadURL;
-
-              product
-                .save()
-                .then((product) => {
-                  return res.status(200).json(product);
-                })
-                .catch((err, next) => {
-                  res.status(500).json(err.message);
-                  next;
-                });
-            });
-          }
-        );
-
-        // product.photo.data = fs.readFileSync(files.thumbnail_cdn.filepath);
-        // product.photo.contentType = files.thumbnail_cdn.mimetype;
-      }
-
-      console.log("prod", product);
-
-      // res.json(product);
-    });
   }
   // PUT /products/:id
   update(req, res, next) {
@@ -168,55 +84,63 @@ class ProductController {
     next();
   }
 
-  // upload Image to Firebase
-  async uploadImageToFirebase(file) {
-    //   const storageRef = ref(
-    //     storage,
-    //     `images/${files.thumbnail_cdn.originalFilename}`
-    //   );
-
-    //   uploadBytes(storageRef, fs.readFileSync(files.thumbnail_cdn.filepath)).then(
-    //     (snapshot) => {
-    //       console.log("Uploaded a blob or file!", snapshot);
-    //     }
-    //   );
-
-    const storageRef = ref(storage, `images/${file.originalFilename}`);
-
-    const uploadTask = await uploadBytesResumable(
-      storageRef,
-      fs.readFileSync(file.filepath)
-    );
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        // Observe state change events such as progress, pause, and resume
-        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log("Upload is " + progress + "% done");
-        switch (snapshot.state) {
-          case "paused":
-            console.log("Upload is paused");
-            break;
-          case "running":
-            console.log("Upload is running");
-            break;
-        }
-      },
-      (error) => {
-        // Handle unsuccessful uploads
-      },
-      () => {
-        // Handle successful uploads on complete
-        // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          console.log("File available at", downloadURL);
-          return downloadURL;
-        });
+  // upload image to firebase
+  uploadImage(req, res, next) {
+    console.log("đang up load");
+    const form = new formidable.IncomingForm();
+    form.keepExtensions = true;
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        return res.status(400).json(err.message);
       }
-    );
+      console.log(files);
+      if (files.image) {
+        if (files.size > 10000) {
+          return res
+            .status(400)
+            .json({ message: "Bạn nên upload ảnh dưới 10mb!" });
+        }
+        const storageRef = ref(
+          storage,
+          `images/${files.image.originalFilename}`
+        );
+
+        const uploadTask = uploadBytesResumable(
+          storageRef,
+          fs.readFileSync(files.image.filepath),
+          {
+            contentType: files.image.mimetype,
+          }
+        );
+
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+            switch (snapshot.state) {
+              case "paused":
+                console.log("Upload is paused");
+                break;
+              case "running":
+                console.log("Upload is running");
+                break;
+            }
+          },
+          (error) => {
+            console.log("Lỗi cmnr ", error);
+            res.status(500).json(error.message);
+          },
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              console.log("File available at", downloadURL);
+              return res.status(200).json(downloadURL);
+            });
+          }
+        );
+      }
+    });
   }
 }
 

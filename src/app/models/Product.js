@@ -14,11 +14,7 @@ const productSchema = new Schema(
     description: { type: String, required: true },
     slug: { type: String, slug: "name", unique: true },
     quantily: { type: Number, required: true },
-    thumbnail_cdn_server: { type: String, required: true },
-    photo: {
-      data: Buffer,
-      contentType: String,
-    },
+    thumbnail_cdn: { type: String, required: true },
   },
   {
     timestamps: true,
